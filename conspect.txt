@@ -63,7 +63,7 @@ docker compose:
 docker-compose up - запуск сервисов 
 docker-compose down - остановка сервисов 
 docker-compose ps - просмотр всех запущенных сервисов 
-docker-compose bulid - создание сервиса из docker-compose
+docker-compose build - создание сервиса из docker-compose
 
 
 Dockerfile:
