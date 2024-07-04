@@ -14,6 +14,8 @@ from rest_framework.status import HTTP_200_OK
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from .serializers import RegistrationPhoneSerializer
+from shopbooks_124.tasks import send_confirmation_email_task, send_confirmation_password_task
+
 
 logger = logging.getLogger('account')
 User = get_user_model()
@@ -25,7 +27,7 @@ class RegistrationView(APIView):
         user = serializer.save()
         if user:
             try:
-                send_confirmation_email(email=user.email, 
+                send_confirmation_email_task.delay(email=user.email, 
                                         code=user.activation_code)
                 logger.info(f'User{user.email} был зарегистрован и сообщение было отправлено')
             except:
@@ -81,7 +83,8 @@ class RegistrationTemplateView(APIView):
             user = serializer.save()
             if user:
                 try:
-                    send_confirmation_email(user.email, user.activation_code)
+                    # send_confirmation_email(user.email, user.activation_code)
+                    send_confirmation_email_task.delay(user.email, user.activation_code)
                     return redirect('activation')
                 except:
                     return Response({'message': 'Зарегистровался, но на почту код не отправился'}, status=201)
@@ -145,7 +148,8 @@ class ResetPasswordView(APIView):
                 user = User.objects.get(email=email)
                 user.create_activation_code()
                 user.save()
-                send_confirmation_password(user.email, user.activation_code)
+                # send_confirmation_password(user.email, user.activation_code)
+                send_confirmation_password_task.delay(user.email, user.activation_code)
                 return Response({'activation_code': user.activation_code}, status=200)
             except:
                 return Response({'message': 'User with this mail does not exist'}, status=404)
